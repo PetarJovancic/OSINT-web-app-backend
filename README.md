@@ -22,7 +22,7 @@ The app requires an `.env` file. You can copy content from `.env.example`:
 To execute dependencies run in the terminal:
 
 ```
-./dependencies.sh 
+./init.sh 
 ```
 
 ### Running Using Docker
