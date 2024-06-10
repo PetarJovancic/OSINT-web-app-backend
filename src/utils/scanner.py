@@ -32,11 +32,8 @@ async def run_amass_scan(website: str) -> str:
             entrypoint="/bin/amass",
             command=["enum","-d", website]
         )
-        print("***1")
         container.start()
-        print("***")
         logs = container.logs(stream=True)
-        print("***2")
         output = ""
         for log in logs:
             output += log.decode('utf-8')
