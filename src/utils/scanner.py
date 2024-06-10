@@ -30,7 +30,7 @@ async def run_amass_scan(website: str) -> str:
         container = client.containers.create(
             image="amass:latest",
             entrypoint="/bin/amass",
-            command=["enum","-d", website]
+            command=["enum", "-d", website]
         )
         container.start()
         logs = container.logs(stream=True)

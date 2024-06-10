@@ -24,7 +24,7 @@ async def get_all_ids(db: Session) -> ScanResultIDs:
         logging.exception(f"Error fetching scan result IDs: {e}")
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
-async def run_scan(scan_request: ScanRequest, db: Session)-> ScanStatus:
+async def run_scan(scan_request: ScanRequest, db: Session) -> ScanStatus:
     scan_id = str(uuid4())
     start_time = datetime.now()
     
