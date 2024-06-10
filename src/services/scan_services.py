@@ -28,62 +28,52 @@ async def run_scan(scan_request: ScanRequest, db: Session) -> ScanStatus:
     scan_id = str(uuid4())
     start_time = datetime.now()
     
-    try:
-        if scan_request.scan_type == "THE_HARVESTER":
-            output = await run_theharvester_scan(scan_request.website)
-        elif scan_request.scan_type == "AMASS":
-            output = await run_amass_scan(scan_request.website)
-        else:
-            raise HTTPException(status_code=400, detail="Invalid scan type")
-
-        logging.info(f"Scan output: {output}")
-
-        parsed_results = parse_theharvester_output(output)
-        
-        scan_result = ScanResultModel(
-            id=scan_id,
-            scan_type=scan_request.scan_type,
-            website=scan_request.website,
-            status="Completed",
-            target=parsed_results.target,
-            created_at=start_time,
-            completed_at=datetime.now()
-        )
-
-        db.add(scan_result)
-        db.commit()
-
-        subdomain_mappings = [{"scan_id": scan_id, "subdomain": subdomain} for subdomain in parsed_results.subdomains]
-        ip_mappings = [{"scan_id": scan_id, "ip": ip} for ip in parsed_results.ips]
-        email_mappings = [{"scan_id": scan_id, "email": email} for email in parsed_results.emails]
-
-        db.bulk_insert_mappings(SubdomainModel, subdomain_mappings)
-        db.bulk_insert_mappings(IPModel, ip_mappings)
-        db.bulk_insert_mappings(EmailModel, email_mappings)
-
-        db.commit()
-
-        return ScanStatus(
-            id=scan_id,
-            type=scan_request.scan_type,
-            website=scan_request.website,
-            status="Completed",
-            results=parsed_results,
-            created_at=start_time,
-            completed_at=datetime.now()
-        )
+    if scan_request.scan_type not in ["THE_HARVESTER", "AMASS"]:
+        raise HTTPException(status_code=400, detail="Invalid scan type")
     
-    except Exception as e:
-        logging.exception(f"Error running scan: {e}")
-        return ScanStatus(
-            id=scan_id,
-            type=scan_request.scan_type,
-            website=scan_request.website,
-            status="Failed",
-            results=parsed_results,
-            created_at=start_time,
-            completed_at=datetime.now()
-        )
+    scan_functions = {
+        "THE_HARVESTER": run_theharvester_scan,
+        "AMASS": run_amass_scan
+    }
+    
+    output = await scan_functions[scan_request.scan_type](scan_request.website)
+    
+    logging.info(f"Scan output: {output}")
+
+    parsed_results = parse_theharvester_output(output)
+    
+    scan_result = ScanResultModel(
+        id=scan_id,
+        scan_type=scan_request.scan_type,
+        website=scan_request.website,
+        status="Completed",
+        target=parsed_results.target,
+        created_at=start_time,
+        completed_at=datetime.now()
+    )
+
+    db.add(scan_result)
+    db.commit()
+
+    subdomain_mappings = [{"scan_id": scan_id, "subdomain": subdomain} for subdomain in parsed_results.subdomains]
+    ip_mappings = [{"scan_id": scan_id, "ip": ip} for ip in parsed_results.ips]
+    email_mappings = [{"scan_id": scan_id, "email": email} for email in parsed_results.emails]
+
+    db.bulk_insert_mappings(SubdomainModel, subdomain_mappings)
+    db.bulk_insert_mappings(IPModel, ip_mappings)
+    db.bulk_insert_mappings(EmailModel, email_mappings)
+
+    db.commit()
+
+    return ScanStatus(
+        id=scan_id,
+        type=scan_request.scan_type,
+        website=scan_request.website,
+        status="Completed",
+        results=parsed_results,
+        created_at=start_time,
+        completed_at=datetime.now()
+    )
 
 async def get_results(scan_id: str, db: Session):
     scan_result = db.query(ScanResultModel).options(

@@ -30,14 +30,14 @@ async def run_amass_scan(website: str) -> str:
         container = client.containers.create(
             image="amass:latest",
             entrypoint="/bin/amass",
-            command=["enum", "-d", website]
+            command=["intel", "-d", website, "-whois"]
         )
         container.start()
-        logs = container.logs(stream=True)
-        output = ""
-        for log in logs:
-            output += log.decode('utf-8')
-
+        container.wait()  # Wait for the container to finish
+        logs = container.logs()
+        print(logs)
+        output = logs.decode('utf-8')
+        print(output)
         container.wait()
         container.remove()
         return output
