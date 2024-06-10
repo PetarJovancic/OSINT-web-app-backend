@@ -3,14 +3,14 @@ from typing import List, Optional
 from datetime import datetime
 
 class ScanRequest(BaseModel):
-    scan_type: str = Field(..., example="THE_HARVESTER")
-    website: str = Field(..., example="google.com")
+    scan_type: str
+    website: str 
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
-                "scan_type": "AMASS",
-                "website": "example.com"
+                "scan_type": "THE_HARVESTER",
+                "website": "google.com"
             }
         }
 

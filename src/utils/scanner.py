@@ -26,20 +26,17 @@ async def run_theharvester_scan(website: str) -> str:
         raise HTTPException(status_code=500, detail="Error running The Harvester scan")
     
 async def run_amass_scan(website: str) -> str:
-    import subprocess
     try:
-        # container = client.containers.create(
-        #     image="amass:latest",
-        #     entrypoint="/bin/amass",
-        #     command=["amass", "enum", "-d", website],
-        # )
         container = client.containers.create(
             image="amass:latest",
-            # entrypoint="/bin/amass",
-            command=["intel", "-d", "owasp.org"],
+            entrypoint="/bin/amass",
+            command=["enum","-d", website]
         )
+        print("***1")
         container.start()
+        print("***")
         logs = container.logs(stream=True)
+        print("***2")
         output = ""
         for log in logs:
             output += log.decode('utf-8')
