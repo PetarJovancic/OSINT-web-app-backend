@@ -1,10 +1,18 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import List, Optional
 from datetime import datetime
 
 class ScanRequest(BaseModel):
-    scan_type: str
-    website: str
+    scan_type: str = Field(..., example="THE_HARVESTER")
+    website: str = Field(..., example="google.com")
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "scan_type": "AMASS",
+                "website": "example.com"
+            }
+        }
 
 class ScanResultWithIPs(BaseModel):
     id: str

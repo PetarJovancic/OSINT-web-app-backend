@@ -10,6 +10,7 @@ from fastapi import HTTPException
 from src.models.schemas import ScanRequest, ScanStatus, ScanResultWithIPs, ScanResultIDs, ScanResultID
 from src.models.models import ScanResultModel, IPModel, EmailModel, SubdomainModel
 from src.utils.parser import parse_theharvester_output
+from src.utils.scanner import run_amass_scan, run_theharvester_scan
 
 
 logging.basicConfig(level=logging.INFO)
@@ -29,30 +30,9 @@ async def run_scan(scan_request: ScanRequest, db: Session)-> ScanStatus:
     
     try:
         if scan_request.scan_type == "THE_HARVESTER":
-            container = client.containers.create(
-                image="theharvester:latest",
-                entrypoint="/root/.local/bin/theHarvester",
-                command=["-b", "rapiddns,otx", "-d", scan_request.website],
-            )
-            container.start()
-            logs = container.logs(stream=True)
-            output = ""
-            for log in logs:
-                output += log.decode('utf-8')
-            
-            container.wait()
+            output = await run_theharvester_scan(scan_request.website)
         elif scan_request.scan_type == "AMASS":
-            container = client.containers.create(
-                image="caffix/amass:latest",
-                command=["enum", "-d", scan_request.website],
-            )
-            container.start()
-            logs = container.logs(stream=True)
-            output = ""
-            for log in logs:
-                output += log.decode('utf-8')
-            
-            container.wait()
+            output = await run_amass_scan(scan_request.website)
         else:
             raise HTTPException(status_code=400, detail="Invalid scan type")
 
