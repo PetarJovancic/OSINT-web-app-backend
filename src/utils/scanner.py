@@ -33,11 +33,10 @@ async def run_amass_scan(website: str) -> str:
             command=["intel", "-d", website, "-whois"]
         )
         container.start()
-        container.wait()  # Wait for the container to finish
+        container.wait()
         logs = container.logs()
-        print(logs)
         output = logs.decode('utf-8')
-        print(output)
+
         container.wait()
         container.remove()
         return output
