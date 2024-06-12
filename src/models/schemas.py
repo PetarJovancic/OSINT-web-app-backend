@@ -55,3 +55,12 @@ class ScanStatus(BaseModel):
     results: ScanResult
     created_at: datetime 
     completed_at: Optional[datetime] = None
+
+class ScanResults(BaseModel):
+    id: str
+    scan_type: str
+    website: str
+    status: str
+    created_at: datetime
+    completed_at: datetime
+    error: Optional[str] = None

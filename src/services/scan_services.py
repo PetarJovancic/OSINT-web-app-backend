@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.orm import joinedload
 from fastapi import HTTPException
 
-from src.models.schemas import ScanRequest, ScanStatus, ScanResultWithIPs, ScanResultIDs, ScanResultID
+from src.models.schemas import ScanRequest, ScanStatus, ScanResultWithIPs, ScanResultIDs, ScanResultID, ScanResults
 from src.models.models import ScanResultModel, IPModel, EmailModel, SubdomainModel
 from src.utils.parser import parse_theharvester_output
 from src.utils.scanner import run_amass_scan, run_theharvester_scan
@@ -22,6 +22,24 @@ async def get_all_ids(db: Session) -> ScanResultIDs:
         return ScanResultIDs(ids=[ScanResultID(id=scan_id[0]) for scan_id in scan_ids])
     except Exception as e:
         logging.exception(f"Error fetching scan result IDs: {e}")
+        raise HTTPException(status_code=500, detail="Internal Server Error")
+
+async def get_scans(db: Session) -> list[ScanResults]:
+    try:
+        scans = db.query(ScanResultModel).all()
+        return [
+            ScanResults(
+                id=scan.id,
+                scan_type=scan.scan_type,
+                website=scan.website,
+                status=scan.status,
+                created_at=scan.created_at,
+                completed_at=scan.completed_at,
+                error=scan.error
+            ) for scan in scans
+        ]
+    except Exception as e:
+        logging.exception(f"Error fetching scan results: {e}")
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
 async def run_scan(scan_request: ScanRequest, db: Session) -> ScanStatus:
